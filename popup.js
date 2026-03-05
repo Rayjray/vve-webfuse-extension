@@ -179,7 +179,7 @@ async function startConversation() {
       connectionType: "webrtc",
       dynamicVariables: {
         session_id: sessionId,
-        space_url: "https://proxy.webtoppings.bar/+auto-nmp/"
+        space_url: "https://proxy.webtoppings.bar/+vve-helpdesk/"
       },
       ...CONVERSATION_HANDLERS
     });
