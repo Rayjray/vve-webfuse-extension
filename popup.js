@@ -25,26 +25,16 @@ const micBtn = document.getElementById("micBtn");
 // --- Init: get session ID from Webfuse ---
 async function initSessionId() {
   try {
-    const response = await browser.runtime.sendMessage({ type: "getSessionInfo" });
-    if (response?.sessionInfo?.id) {
-      sessionId = response.sessionInfo.id;
+    const info = await browser.webfuseSession.getSessionInfo();
+    sessionId = info?.id || info?.session_id || null;
+    if (sessionId) {
       sessionIdDisplay.textContent = sessionId.substring(0, 20) + "...";
-      console.log("[VvE] Session ID obtained:", sessionId);
     } else {
-      // Fallback: try direct API
-      const info = await browser.webfuseSession.getSessionInfo();
-      sessionId = info?.id || info?.session_id || null;
-      if (sessionId) {
-        sessionIdDisplay.textContent = sessionId.substring(0, 20) + "...";
-      } else {
-        sessionIdDisplay.textContent = "niet gevonden";
-        showError("Sessie ID kon niet worden opgehaald.");
-      }
+      sessionIdDisplay.textContent = "niet gevonden";
     }
   } catch (err) {
-    console.error("[VvE] Error getting session info:", err);
+    console.error("[VvE] Error:", err);
     sessionIdDisplay.textContent = "fout bij ophalen";
-    showError("Kan geen verbinding maken met de Webfuse sessie.");
   }
 }
 
