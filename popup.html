@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VvE Helpdesk Assistent</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 380px;
+      min-height: 600px;
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0f1923;
+      color: #fff;
+      overflow: hidden;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #1E3A5F 0%, #0d2640 100%);
+      padding: 16px 18px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #FF6B35, #e55a24);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .header-text h1 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.2;
+    }
+
+    .header-text p {
+      font-size: 11px;
+      color: rgba(255,255,255,0.5);
+      margin-top: 2px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #94a3b8;
+      margin-left: auto;
+      flex-shrink: 0;
+      transition: background 0.3s;
+    }
+
+    .status-dot.connected {
+      background: #10B981;
+      box-shadow: 0 0 6px #10B981;
+    }
+
+    /* Session info bar */
+    .session-bar {
+      background: rgba(255,255,255,0.04);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 8px 18px;
+      font-size: 10px;
+      color: rgba(255,255,255,0.35);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .session-bar span {
+      font-family: monospace;
+      color: rgba(255,255,255,0.55);
+      font-size: 10px;
+    }
+
+    #session-id-display {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 240px;
+    }
+
+    /* Messages area */
+    #messages {
+      height: 320px;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      scroll-behavior: smooth;
+    }
+
+    #messages::-webkit-scrollbar {
+      width: 4px;
+    }
+    #messages::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    #messages::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px;
+    }
+
+    .message {
+      max-width: 85%;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+
+    .message--ai {
+      background: rgba(30, 58, 95, 0.8);
+      border: 1px solid rgba(255,255,255,0.08);
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+      color: #e2e8f0;
+    }
+
+    .message--user {
+      background: linear-gradient(135deg, #FF6B35, #e55a24);
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+      color: #fff;
+    }
+
+    .welcome-message {
+      text-align: center;
+      color: rgba(255,255,255,0.35);
+      font-size: 12px;
+      padding: 20px 10px;
+      line-height: 1.6;
+    }
+
+    .welcome-message .icon {
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+
+    /* Orb / voice indicator */
+    .orb-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      background: rgba(0,0,0,0.2);
+      gap: 16px;
+    }
+
+    .orb {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #3B82F6, #1E3A5F);
+      cursor: pointer;
+      transition: all 0.3s;
+      border: 2px solid rgba(59, 130, 246, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .orb::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: transparent;
+      transition: box-shadow 0.3s;
+    }
+
+    .orb.active {
+      background: radial-gradient(circle at 35% 35%, #10B981, #065f46);
+      border-color: rgba(16, 185, 129, 0.6);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .orb.speaking {
+      background: radial-gradient(circle at 35% 35%, #FF6B35, #c2410c);
+      border-color: rgba(255, 107, 53, 0.6);
+      animation: pulse-fast 0.8s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+      50% { box-shadow: 0 0 0 12px rgba(16, 185, 129, 0); }
+    }
+
+    @keyframes pulse-fast {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255, 107, 53, 0.5); }
+      50% { box-shadow: 0 0 0 10px rgba(255, 107, 53, 0); }
+    }
+
+    .orb-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .orb-label {
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+      text-align: center;
+    }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .text-input {
+      flex: 1;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 8px 14px;
+      color: #fff;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .text-input::placeholder {
+      color: rgba(255,255,255,0.3);
+    }
+
+    .text-input:focus {
+      border-color: rgba(59, 130, 246, 0.5);
+    }
+
+    .send-btn {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #1E3A5F, #2d5590);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 50%;
+      cursor: pointer;
+      color: #fff;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .send-btn:hover {
+      background: linear-gradient(135deg, #2d5590, #3b6eb5);
+      transform: scale(1.05);
+    }
+
+    .mic-btn {
+      width: 36px;
+      height: 36px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 50%;
+      cursor: pointer;
+      color: rgba(255,255,255,0.6);
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .mic-btn:hover {
+      background: rgba(255,255,255,0.12);
+    }
+
+    .mic-btn.active {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: #ef4444;
+    }
+
+    /* Loading state */
+    .loading-bar {
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #3B82F6, transparent);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      display: none;
+    }
+
+    .loading-bar.active {
+      display: block;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    /* Error state */
+    .error-banner {
+      display: none;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #fca5a5;
+      font-size: 11px;
+      padding: 8px 16px;
+      text-align: center;
+    }
+
+    .error-banner.visible {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">🏠</div>
+  <div class="header-text">
+    <h1>VvE Helpdesk Assistent</h1>
+    <p>Verduurzaming · Subsidies · Advies</p>
+  </div>
+  <div class="status-dot" id="statusDot"></div>
+</div>
+
+<div class="session-bar">
+  Sessie: <span id="session-id-display">ophalen...</span>
+</div>
+
+<div class="loading-bar" id="loadingBar"></div>
+<div class="error-banner" id="errorBanner"></div>
+
+<div id="messages">
+  <div class="welcome-message">
+    <div class="icon">🤖</div>
+    <strong>Hallo! Ik ben uw VvE Helpdesk assistent.</strong><br>
+    Ik kan u helpen met vragen over verduurzaming, subsidies en de stappen in het verduurzamingsproces.<br><br>
+    Klik op de microfoon om te beginnen, of typ uw vraag hieronder.
+  </div>
+</div>
+
+<div class="orb-container">
+  <div>
+    <div class="orb" id="orb">🎙️</div>
+    <div class="orb-label" id="orbLabel">Klik om te starten</div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="mic-btn" id="micBtn" title="Microfoon">🎤</button>
+  <input
+    type="text"
+    class="text-input"
+    id="textInput"
+    placeholder="Stel een vraag..."
+    maxlength="500"
+  />
+  <button class="send-btn" id="sendBtn" title="Verstuur">➤</button>
+</div>
+
+<script src="popup.js"></script>
+</body>
+</html>
