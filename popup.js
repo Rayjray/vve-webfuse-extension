@@ -34,7 +34,7 @@ async function initSessionId() {
     }
   } catch (err) {
     console.error("[VvE] Error:", err);
-    sessionIdDisplay.textContent = "fout bij ophalen";
+    sessionId = "fSwHO4V8yhigSlimQ3sWz6KpHA"; sessionIdDisplay.textContent = sessionId.substring(0, 20) + "...";
   }
 }
 
