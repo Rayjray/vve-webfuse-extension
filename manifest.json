@@ -1,11 +1,28 @@
 {
   "manifest_version": 3,
-  "name": "VvE Helpdesk ElevenLabs Agent",
   "version": "1.0",
+  "name": "VvE Helpdesk ElevenLabs Agent",
+  "host_permissions": [
+    "https://*.elevenlabs.io/*",
+    "ws://*.elevenlabs.io/*"
+  ],
   "background": {
     "service_worker": "background.js"
   },
   "action": {
     "default_popup": "popup.html"
-  }
+  },
+  "permissions": [
+    "webfuseSession"
+  ],
+  "env": [
+    {
+      "key": "AGENT_KEY",
+      "value": "agent_4701kjs96cgcew6v08wya98c1vv9"
+    },
+    {
+      "key": "SPACE_REST_KEY",
+      "value": "rk_kvZYcnweunoCrFeNq5YMugBDIU6SVp_9"
+    }
+  ]
 }
